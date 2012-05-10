@@ -1,3 +1,15 @@
+// shim layer with setTimeout fallback
+window.requestAnimFrame = (function(){
+    return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            window.oRequestAnimationFrame      ||
+            window.msRequestAnimationFrame     ||
+            function( callback ){
+                window.setTimeout(callback, 1000 / 60);
+            };
+})();
+
 window.onload = function(){
     var canvas = document.getElementById('c');
     var ctx    = canvas.getContext('2d');
@@ -24,14 +36,37 @@ window.onload = function(){
         strokeStyle : 'orange'
     }));
 
-    drawList.forEach(function(item){
-        item.draw();
-    });
+    var moves = [
+        {x : 2,   y : 1},
+        {x : -1,   y : 4},
+        {x : 1.5, y : 1.5}
+    ];
+    var loop = function(){
+        ctx.clearRect(0, 0, 500, 500);
+        drawList.forEach(function(item, i){
+            // move
+            item.move(moves[i].x, moves[i].y);
+            // bounce
+            if(item.x < 0 || item.x > 450){
+                moves[i].x = -moves[i].x;
+            }
+            if(item.y < 0 || item.y > 400){
+                moves[i].y = -moves[i].y;
+            }
+            item.draw();
+        });
+
+        window.requestAnimFrame(loop);
+    }
+
+    loop();
 };
 
 var StickMan = function(ctx, config){
     this.ctx    = ctx;
     this.config = config || {};
+    this.x = config.x;
+    this.y = config.y;
 };
 
 StickMan.prototype.draw = function(){
@@ -42,7 +77,7 @@ StickMan.prototype.draw = function(){
     ctx.strokeStyle = config.strokeStyle || 'black';
 
     ctx.save();
-    ctx.translate(config.x, config.y);
+    ctx.translate(this.x, this.y);
     if(config.scale){
         ctx.scale(config.scale, config.scale);
     }
@@ -76,4 +111,9 @@ StickMan.prototype.draw = function(){
 
     ctx.stroke();
     ctx.restore();
+};
+
+StickMan.prototype.move = function(x, y){
+    this.x += x;
+    this.y += y;
 };
