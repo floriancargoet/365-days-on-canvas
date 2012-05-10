@@ -18,12 +18,16 @@ window.onload = function(){
 
     drawList.push(new StickMan(ctx, {
         x : 50,
-        y : 50
+        y : 50,
+        vx : 1,
+        vy : 0.5
     }));
 
     drawList.push(new StickMan(ctx, {
         x : 150.5,
         y : 50.5,
+        vx : -0.5,
+        vy : 2,
         scale : 1.2,
         lineWidth : 3,
         strokeStyle : 'green'
@@ -32,27 +36,27 @@ window.onload = function(){
     drawList.push(new StickMan(ctx, {
         x : 250,
         y : 50,
+        vx : 0.7,
+        vy : 0.7,
         scale : 0.8,
         strokeStyle : 'orange'
     }));
 
-    var moves = [
-        {x : 2,   y : 1},
-        {x : -1,   y : 4},
-        {x : 1.5, y : 1.5}
-    ];
+    drawList.push(new Background(ctx,{
+        x : 250,
+        y : 250,
+        zIndex : -1
+    }));
+
+    // sort the drawlist by zindex
+    drawList.sort(function(a, b){
+        return (a.config.zIndex || 0) - (b.config.zIndex || 0);
+    });
+
     var loop = function(){
         ctx.clearRect(0, 0, 500, 500);
         drawList.forEach(function(item, i){
-            // move
-            item.move(moves[i].x, moves[i].y);
-            // bounce
-            if(item.x < 0 || item.x > 450){
-                moves[i].x = -moves[i].x;
-            }
-            if(item.y < 0 || item.y > 400){
-                moves[i].y = -moves[i].y;
-            }
+            item.update();
             item.draw();
         });
 
@@ -65,8 +69,11 @@ window.onload = function(){
 var StickMan = function(ctx, config){
     this.ctx    = ctx;
     this.config = config || {};
-    this.x = config.x;
-    this.y = config.y;
+
+    this.x      = config.x;
+    this.y      = config.y;
+    this.vx     = config.vx;
+    this.vy     = config.vy
 };
 
 StickMan.prototype.draw = function(){
@@ -116,4 +123,71 @@ StickMan.prototype.draw = function(){
 StickMan.prototype.move = function(x, y){
     this.x += x;
     this.y += y;
+};
+
+StickMan.prototype.update = function(){
+    // move
+    this.move(this.vx, this.vy);
+    // bounce
+    if(this.x < 0 || this.x > 450){
+        this.vx = -this.vx;
+    }
+    if(this.y < 0 || this.y > 400){
+        this.vy = -this.vy;
+    }
+};
+
+var Background = function(ctx, config){
+    this.ctx    = ctx;
+    this.config = config || {};
+
+    this.x      = config.x;
+    this.y      = config.y;
+    this.angle  = config.angle || 0;
+
+    var arcs = [];
+    for(var angle = 0; angle < 2 * Math.PI;){
+        var arc = 0.15 + Math.random() * 0.3;
+        arcs.push(arc);
+        angle += arc;
+    }
+    this.arcs = arcs;
+}
+
+Background.prototype.draw = function(){
+    var ctx    = this.ctx;
+    var config = this.config;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle, this.angle);
+
+    var styles = ['red', 'yellow', 'pink'];
+    styleIndex = 0;
+
+    var angle = 0, arc;
+    for(var i = 0, l = this.arcs.length; i < l; i++){
+        arc = this.arcs[i];
+
+        ctx.beginPath();
+        ctx.fillStyle = styles[styleIndex];
+        styleIndex = (styleIndex + 1) % styles.length;
+
+        ctx.moveTo(0, 0);
+        var r = 360; // radius, coincidentally 360px
+        ctx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
+        angle += arc;
+        ctx.lineTo(r * Math.cos(angle + 0.01), r * Math.sin(angle + 0.01)); // add tiny angle to avoid artifacts
+        ctx.closePath();
+
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+Background.prototype.update = function(){
+    this.rotate(0.005);
+};
+Background.prototype.rotate = function(angle){
+    this.angle += angle;
 };
