@@ -61,7 +61,7 @@ window.onload = function(){
         });
 
         window.requestAnimFrame(loop);
-    }
+    };
 
     loop();
 };
@@ -73,7 +73,8 @@ var StickMan = function(ctx, config){
     this.x      = config.x;
     this.y      = config.y;
     this.vx     = config.vx;
-    this.vy     = config.vy
+    this.vy     = config.vy;
+    this.scale  = config.scale || 1;
 };
 
 StickMan.prototype.draw = function(){
@@ -85,9 +86,7 @@ StickMan.prototype.draw = function(){
 
     ctx.save();
     ctx.translate(this.x, this.y);
-    if(config.scale){
-        ctx.scale(config.scale, config.scale);
-    }
+    ctx.scale(this.scale, this.scale);
 
     // head, hands & feet
     ctx.strokeRect(15,  0, 30, 30);
@@ -128,14 +127,25 @@ StickMan.prototype.move = function(x, y){
 StickMan.prototype.update = function(){
     // move
     this.move(this.vx, this.vy);
+    var bbox = this.getBBox();
     // bounce
-    if(this.x < 0 || this.x > 450){
+    if(bbox.x < 0 || bbox.x + bbox.w > 500){
         this.vx = -this.vx;
     }
-    if(this.y < 0 || this.y > 400){
+    if(bbox.y < 0 || bbox.y + bbox.h > 500){
         this.vy = -this.vy;
     }
 };
+
+StickMan.prototype.getBBox = function(){
+    return {
+        x : this.x,
+        y : this.y,
+        w : 60  * this.scale,
+        h : 130 * this.scale
+    };
+};
+
 
 var Background = function(ctx, config){
     this.ctx    = ctx;
@@ -152,7 +162,7 @@ var Background = function(ctx, config){
         angle += arc;
     }
     this.arcs = arcs;
-}
+};
 
 Background.prototype.draw = function(){
     var ctx    = this.ctx;
