@@ -45,6 +45,12 @@ window.onload = function(){
     drawList.push(new Background(ctx,{
         x : 250,
         y : 250,
+        zIndex : -2
+    }));
+
+    drawList.push(new Beach(ctx, {
+        yWater : 300,
+        ySand  : 400,
         zIndex : -1
     }));
 
@@ -200,4 +206,49 @@ Background.prototype.update = function(){
 };
 Background.prototype.rotate = function(angle){
     this.angle += angle;
+};
+
+var Beach = function(ctx, config){
+    this.ctx    = ctx;
+    this.config = config || {};
+
+    this.yWater = config.yWater;
+    this.ySand  = config.ySand;
+    this.shift  = 0;
+};
+
+Beach.prototype.draw = function(){
+    var ctx    = this.ctx;
+    var config = this.config;
+
+    ctx.save();
+
+    // sand
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(0, this.ySand, 500, 500 - this.ySand);
+
+    // water
+    ctx.translate(50-(this.shift % 200), this.yWater);
+    ctx.scale(1, 0.5);
+    var waterHeight = (this.ySand - this.yWater) * 2;
+
+    ctx.fillStyle = 'blue';
+
+    ctx.beginPath();
+    ctx.moveTo(-50, waterHeight);
+    ctx.lineTo(-50, 0);
+    ctx.arc(0,   0, 50, Math.PI, 0, false);
+    ctx.arc(100, 0, 50, Math.PI, 0, true);
+    ctx.arc(200, 0, 50, Math.PI, 0, false);
+    ctx.arc(300, 0, 50, Math.PI, 0, true);
+    ctx.arc(400, 0, 50, Math.PI, 0, false);
+    ctx.arc(500, 0, 50, Math.PI, 0, true);
+    ctx.arc(600, 0, 50, Math.PI, 0, false);
+    ctx.lineTo(650, waterHeight);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+};
+Beach.prototype.update = function(){
+    this.shift++;
 };
