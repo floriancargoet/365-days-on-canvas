@@ -43,14 +43,14 @@ window.onload = function(){
     }));
 
     drawList.push(new Background(ctx,{
-        x : 250,
+        x : 400,
         y : 250,
         zIndex : -2
     }));
 
     drawList.push(new Beach(ctx, {
-        yWater : 300,
-        ySand  : 400,
+        yWater : 250,
+        ySand  : 350,
         zIndex : -1
     }));
 
@@ -190,7 +190,7 @@ Background.prototype.draw = function(){
         styleIndex = (styleIndex + 1) % styles.length;
 
         ctx.moveTo(0, 0);
-        var r = 360; // radius, coincidentally 360px
+        var r = 500;
         ctx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
         angle += arc;
         ctx.lineTo(r * Math.cos(angle + 0.01), r * Math.sin(angle + 0.01)); // add tiny angle to avoid artifacts
@@ -214,7 +214,7 @@ var Beach = function(ctx, config){
 
     this.yWater = config.yWater;
     this.ySand  = config.ySand;
-    this.shift  = 0;
+    this.t      = 0;
 };
 
 Beach.prototype.draw = function(){
@@ -224,31 +224,40 @@ Beach.prototype.draw = function(){
     ctx.save();
 
     // sand
-    ctx.fillStyle = 'yellow';
-    ctx.fillRect(0, this.ySand, 500, 500 - this.ySand);
+    ctx.fillStyle = '#F0C479';
+    ctx.fillRect(0, this.yWater, 500, 500 - this.yWater);
 
     // water
-    ctx.translate(50-(this.shift % 200), this.yWater);
-    ctx.scale(1, 0.5);
-    var waterHeight = (this.ySand - this.yWater) * 2;
+    var waterHeight = (this.ySand - this.yWater);
 
-    ctx.fillStyle = 'blue';
+    ctx.fillStyle = '#6AB8DF';
 
     ctx.beginPath();
-    ctx.moveTo(-50, waterHeight);
-    ctx.lineTo(-50, 0);
+
+    // water/sand line
+    ctx.translate(0, this.ySand + this.amplitude * 100);
+    ctx.scale(1, this.amplitude);
     ctx.arc(0,   0, 50, Math.PI, 0, false);
     ctx.arc(100, 0, 50, Math.PI, 0, true);
     ctx.arc(200, 0, 50, Math.PI, 0, false);
     ctx.arc(300, 0, 50, Math.PI, 0, true);
     ctx.arc(400, 0, 50, Math.PI, 0, false);
     ctx.arc(500, 0, 50, Math.PI, 0, true);
-    ctx.arc(600, 0, 50, Math.PI, 0, false);
-    ctx.lineTo(650, waterHeight);
+    ctx.scale(1, 1/this.amplitude);
+    ctx.translate(0, -this.amplitude * 100);
+
+    //foam
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = 'white';
+    ctx.stroke();
+
+    ctx.lineTo(500, -waterHeight);
+    ctx.lineTo(  0, -waterHeight);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
 };
 Beach.prototype.update = function(){
-    this.shift++;
+    this.t += 0.01;
+    this.amplitude = 0.25*(1 + Math.sin(this.t));
 };
