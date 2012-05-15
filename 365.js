@@ -17,40 +17,23 @@ window.onload = function(){
     var drawList = [];
 
     drawList.push(new StickMan(ctx, {
-        x : 50,
-        y : 50,
+        x : 0,
+        y : 380,
         vx : 1,
-        vy : 0.5
-    }));
-
-    drawList.push(new StickMan(ctx, {
-        x : 150.5,
-        y : 50.5,
-        vx : -0.5,
-        vy : 2,
-        scale : 1.2,
-        lineWidth : 3,
-        strokeStyle : 'green'
-    }));
-
-    drawList.push(new StickMan(ctx, {
-        x : 250,
-        y : 50,
-        vx : 0.7,
-        vy : 0.7,
-        scale : 0.8,
-        strokeStyle : 'orange'
-    }));
-
-    drawList.push(new Background(ctx,{
-        x : 400,
-        y : 250,
-        zIndex : -2
+        vy : 0,
+        scale : 0.8
     }));
 
     drawList.push(new Beach(ctx, {
         yWater : 250,
         ySand  : 350,
+        zIndex : -1
+    }));
+
+    drawList.push(new Sun(ctx, {
+        x : 400,
+        y : 100,
+        radius : 20,
         zIndex : -1
     }));
 
@@ -60,7 +43,8 @@ window.onload = function(){
     });
 
     var loop = function(){
-        ctx.clearRect(0, 0, 500, 500);
+        ctx.fillStyle = '#0582C2'; // sky
+        ctx.fillRect(0, 0, 500, 500);
         drawList.forEach(function(item, i){
             item.update();
             item.draw();
@@ -261,3 +245,29 @@ Beach.prototype.update = function(){
     this.t += 0.01;
     this.amplitude = 0.25*(1 + Math.sin(this.t));
 };
+
+var Sun = function(ctx, config){
+    this.ctx    = ctx;
+    this.config = config || {};
+
+    this.x      = config.x;
+    this.y      = config.y;
+    this.radius = config.radius;
+};
+
+Sun.prototype.draw = function(){
+    var ctx    = this.ctx;
+    var config = this.config;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.fillStyle = '#FFFF00';
+
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, 2 * Math.PI, true);
+    ctx.fill();
+
+    ctx.restore();
+};
+
+Sun.prototype.update = function(){};
