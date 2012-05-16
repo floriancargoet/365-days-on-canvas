@@ -37,6 +37,11 @@ window.onload = function(){
         zIndex : -1
     }));
 
+    drawList.push(new Shark(ctx, {
+        x : 350,
+        y : 300
+    }));
+    
     // sort the drawlist by zindex
     drawList.sort(function(a, b){
         return (a.config.zIndex || 0) - (b.config.zIndex || 0);
@@ -271,3 +276,45 @@ Sun.prototype.draw = function(){
 };
 
 Sun.prototype.update = function(){};
+
+
+var Shark = function(ctx, config){
+    this.ctx    = ctx;
+    this.config = config || {};
+
+    this.cx = config.x;
+    this.cy = config.y;
+    this.t  = 0;
+};
+
+Shark.prototype.draw = function(){
+    var ctx    = this.ctx;
+    var config = this.config;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    if(this.reverse){
+        ctx.scale(-1, 1);
+    }
+    ctx.fillStyle   = '#ccc';
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(15, 0, 15, Math.PI, -Math.PI/2, false);
+    ctx.arc(45, 0, 30, -5*Math.PI/6, Math.PI, true);
+
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+Shark.prototype.update = function(){
+    this.t += 0.01
+    var dx = 50 * Math.cos(this.t);
+    var dy = 30 * Math.sin(this.t);
+    this.x = this.cx + dx;
+    this.y = this.cy + dy;
+    this.reverse = (dy < 0);
+};
