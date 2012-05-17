@@ -41,7 +41,13 @@ window.onload = function(){
         x : 350,
         y : 300
     }));
-    
+
+    drawList.push(new Umbrella(ctx, {
+        x : 380,
+        y : 420,
+        angle : -Math.PI/8
+    }));
+
     // sort the drawlist by zindex
     drawList.sort(function(a, b){
         return (a.config.zIndex || 0) - (b.config.zIndex || 0);
@@ -317,4 +323,53 @@ Shark.prototype.update = function(){
     this.x = this.cx + dx;
     this.y = this.cy + dy;
     this.reverse = (dy < 0);
+};
+
+var Umbrella = function(ctx, config){
+    this.ctx    = ctx;
+    this.config = config || {};
+
+    this.x     = config.x;
+    this.y     = config.y;
+    this.angle = config.angle;
+};
+
+Umbrella.prototype.draw = function(){
+    var ctx = this.ctx;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+
+    ctx.beginPath();
+    ctx.moveTo(0, -35);
+    ctx.lineTo(0, 60);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-60, 0);
+    ctx.quadraticCurveTo(  0, -60,  60, 0);
+    ctx.quadraticCurveTo( 45, -10,  30, 0);
+    ctx.quadraticCurveTo(  0, -10, -30, 0);
+    ctx.quadraticCurveTo(-45, -10, -60, 0);
+
+    ctx.fillStyle = 'yellow';
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.moveTo(30, 0);
+    ctx.quadraticCurveTo(  0, -10, -30,   0);
+    ctx.quadraticCurveTo(-20, -20,   0, -30);
+    ctx.quadraticCurveTo( 20, -20,  30,   0);
+
+    ctx.fillStyle  = 'red';
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+Umbrella.prototype.update = function(){
 };
