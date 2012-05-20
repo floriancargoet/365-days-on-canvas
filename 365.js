@@ -218,13 +218,35 @@ Beach.prototype.draw = function(){
 
     ctx.save();
 
+    var waterHeight = (this.ySand - this.yWater);
+
     // sand
     ctx.fillStyle = '#F0C479';
     ctx.fillRect(0, this.yWater, 500, 500 - this.yWater);
 
-    // water
-    var waterHeight = (this.ySand - this.yWater);
+    // wet sand
+    ctx.beginPath();
+    ctx.fillStyle = '#e0b576';
+    ctx.translate(0, this.ySand + this.amplitude2 * 100 + 10);
+    ctx.scale(1, this.amplitude2);
+    ctx.arc(0,   0, 50, Math.PI, 0, false);
+    ctx.arc(100, 0, 50, Math.PI, 0, true);
+    ctx.arc(200, 0, 50, Math.PI, 0, false);
+    ctx.arc(300, 0, 50, Math.PI, 0, true);
+    ctx.arc(400, 0, 50, Math.PI, 0, false);
+    ctx.arc(500, 0, 50, Math.PI, 0, true);
+    ctx.scale(1, 1/this.amplitude2);
+    ctx.translate(0, -this.amplitude2 * 100 - 10);
+    ctx.lineTo(500, -waterHeight);
+    ctx.lineTo(  0, -waterHeight);
+    ctx.closePath();
 
+    ctx.fill();
+
+    ctx.restore();
+    ctx.save();
+
+    // water
     ctx.fillStyle = '#6AB8DF';
 
     ctx.beginPath();
@@ -241,7 +263,7 @@ Beach.prototype.draw = function(){
     ctx.scale(1, 1/this.amplitude);
     ctx.translate(0, -this.amplitude * 100);
 
-    //foam
+    // foam
     ctx.lineWidth = 10;
     ctx.strokeStyle = 'white';
     ctx.stroke();
@@ -250,11 +272,14 @@ Beach.prototype.draw = function(){
     ctx.lineTo(  0, -waterHeight);
     ctx.closePath();
     ctx.fill();
+
+
     ctx.restore();
 };
 Beach.prototype.update = function(){
     this.t += 0.01;
-    this.amplitude = 0.25*(1 + Math.sin(this.t));
+    this.amplitude  = 0.25*(1 + Math.sin(this.t));
+    this.amplitude2 = 0.25*(1 + Math.sin(this.t - Math.PI/6));
 };
 
 var Sun = function(ctx, config){
