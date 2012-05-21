@@ -17,10 +17,12 @@ window.onload = function(){
     var drawList = [];
 
     drawList.push(new StickMan(ctx, {
-        x : 0,
+        x : 100,
         y : 380,
-        vx : 1,
+        vx : 0,
         vy : 0,
+        zIndex : 10,
+        msg : 'It would be easier with a <beach> tag!',
         scale : 0.8
     }));
 
@@ -117,12 +119,25 @@ StickMan.prototype.draw = function(){
     ctx.lineTo(30, 90);
 
     ctx.stroke();
+
+    if(config.msg){
+        this.say(config.msg);
+    }
     ctx.restore();
 };
 
 StickMan.prototype.move = function(x, y){
     this.x += x;
     this.y += y;
+};
+
+StickMan.prototype.say = function(msg){
+    var bubble = new SpeechBubble(this.ctx, {
+        x : 50,
+        y : 15,
+        text : msg
+    });
+    bubble.draw();
 };
 
 StickMan.prototype.update = function(){
@@ -397,4 +412,49 @@ Umbrella.prototype.draw = function(){
 };
 
 Umbrella.prototype.update = function(){
+};
+
+var SpeechBubble = function(ctx, config){
+    this.ctx = ctx;
+    this.config = config;
+};
+
+SpeechBubble.prototype.draw = function(){
+    var ctx = this.ctx;
+    ctx.save();
+
+    ctx.fillStyle    = 'white';
+    ctx.strokeStyle  = 'black';
+    ctx.font         = '20px sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth    = 3;
+    var w = ctx.measureText(this.config.text).width + 20;
+    var h1 = 80, h2 = 20;
+
+    ctx.translate(this.config.x, this.config.y - h1 - h2);
+
+    ctx.beginPath();
+    ctx.moveTo(w/2, 0);
+    // top left
+    ctx.quadraticCurveTo(0, 0, 0, h1/2);
+
+    // bottom left
+    ctx.quadraticCurveTo(0, h1, w/4, h1);
+
+    // arrow
+    ctx.quadraticCurveTo(w/4, h1+h2, 0, h1+h2);
+    ctx.quadraticCurveTo(w/4, h1+h2, w/2, h1);
+
+    //bottom right
+    ctx.quadraticCurveTo(w, h1, w, h1/2);
+    //top right
+    ctx.quadraticCurveTo(w, 0, w/2, 0);
+
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.fillStyle = 'black';
+    ctx.fillText(this.config.text, 10, h1/2);
+
+    ctx.restore();
 };
