@@ -22,7 +22,7 @@ window.onload = function(){
         vx : 0,
         vy : 0,
         zIndex : 10,
-        msg : 'It would be easier with a <beach> tag!',
+        msg : ['It would be easier', 'with a <beach> tag!'],
         scale : 0.8
     }));
 
@@ -417,44 +417,82 @@ Umbrella.prototype.update = function(){
 var SpeechBubble = function(ctx, config){
     this.ctx = ctx;
     this.config = config;
+    this.padding = (config.padding != null) ? config.padding : 20;
+    if(typeof config.text === 'string'){
+        config.text = [config.text];
+    }
+
+};
+
+SpeechBubble.prototype.computeSize = function(lineHeight){
+    var width, height;
+    var text = this.config.text;
+    var ctx  = this.ctx;
+
+    var widths = text.map(function(t){
+        return ctx.measureText(t).width;
+    });
+
+    width  = Math.max.apply(Math, widths);
+    height = lineHeight * text.length;
+
+    return {
+        width      : width  + 2 * this.padding,
+        height     : height + 2 * this.padding,
+        lineWidths : widths
+    };
 };
 
 SpeechBubble.prototype.draw = function(){
     var ctx = this.ctx;
+    var config = this.config;
     ctx.save();
 
-    ctx.fillStyle    = 'white';
-    ctx.strokeStyle  = 'black';
-    ctx.font         = '20px sans-serif';
-    ctx.textBaseline = 'middle';
-    ctx.lineWidth    = 3;
-    var w = ctx.measureText(this.config.text).width + 20;
-    var h1 = 80, h2 = 20;
+    ctx.fillStyle   = 'white';
+    ctx.strokeStyle = 'black';
+    ctx.font        = '20px sans-serif';
+    ctx.lineWidth   = 3;
 
-    ctx.translate(this.config.x, this.config.y - h1 - h2);
+    var size = this.computeSize(20);
+    var w    = size.width;
+    var h1   = size.height;
+    var h2   = 30;
+    var cornerW = w/5;
+    var cornerH = Math.min(h1/2, cornerW);
+
+    ctx.translate(config.x, config.y - h1 - h2);
 
     ctx.beginPath();
-    ctx.moveTo(w/2, 0);
-    // top left
-    ctx.quadraticCurveTo(0, 0, 0, h1/2);
+    ctx.moveTo(4*cornerW, 0);
+    // top, top left
+    ctx.lineTo(cornerW, 0);
+    ctx.quadraticCurveTo(0, 0, 0, cornerH);
 
-    // bottom left
-    ctx.quadraticCurveTo(0, h1, w/4, h1);
+    // left, bottom left
+    ctx.lineTo(0, h1 - cornerH);
+    ctx.quadraticCurveTo(0, h1, cornerW, h1);
 
     // arrow
-    ctx.quadraticCurveTo(w/4, h1+h2, 0, h1+h2);
-    ctx.quadraticCurveTo(w/4, h1+h2, w/2, h1);
+    ctx.quadraticCurveTo(cornerW, h1+h2, 0, h1+h2);
+    ctx.quadraticCurveTo(cornerW, h1+h2, 2*cornerW, h1);
 
-    //bottom right
-    ctx.quadraticCurveTo(w, h1, w, h1/2);
-    //top right
-    ctx.quadraticCurveTo(w, 0, w/2, 0);
+    // bottom, bottom right
+    ctx.lineTo(4*cornerW, h1);
+    ctx.quadraticCurveTo(w, h1, w, h1 - cornerH);
+
+    //right, top right
+    ctx.lineTo(w, cornerH);
+    ctx.quadraticCurveTo(w, 0, 4*cornerW, 0);
 
     ctx.stroke();
     ctx.fill();
 
-    ctx.fillStyle = 'black';
-    ctx.fillText(this.config.text, 10, h1/2);
+    ctx.fillStyle    = 'black';
+    ctx.textBaseline = 'top';
+    var p = this.padding;
+    config.text.forEach(function(line, i){
+        ctx.fillText(line, (w - size.lineWidths[i]) / 2, p + i * 20);
+    });
 
     ctx.restore();
 };
