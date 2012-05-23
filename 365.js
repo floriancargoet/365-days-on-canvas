@@ -50,6 +50,23 @@ window.onload = function(){
         angle : -Math.PI/8
     }));
 
+    drawList.push(new Bird(ctx, {
+        x : 350,
+        y : 80
+    }));
+
+    drawList.push(new Bird(ctx, {
+        x : 370,
+        y : 110,
+        scale : 0.6
+    }));
+
+    drawList.push(new Bird(ctx, {
+        x : 320,
+        y : 100,
+        scale : 0.7
+    }));
+
     // sort the drawlist by zindex
     drawList.sort(function(a, b){
         return (a.config.zIndex || 0) - (b.config.zIndex || 0);
@@ -496,3 +513,38 @@ SpeechBubble.prototype.draw = function(){
 
     ctx.restore();
 };
+
+var Bird = function(ctx, config){
+    this.ctx = ctx;
+    this.config = config;
+    this.x = config.x;
+    this.y = config.y;
+    this.t = 0;
+    config.scale = config.scale || 1;
+};
+
+Bird.prototype.draw = function(){
+    var ctx = this.ctx;
+    var config = this.config;
+    ctx.save();
+    ctx.fillStyle = 'black';
+
+    ctx.translate(this.x, this.y);
+    ctx.scale(config.scale, config.scale);
+    ctx.moveTo(0, 0);
+
+    var m = this.m;
+    //                ctrl pt1,    ctrl pt2,   target pt
+    ctx.bezierCurveTo(  5,  -5,     15, -10 + m,     20, -10 + 1.5*m);
+    ctx.bezierCurveTo( 15,  -8 + m,      5,   0,      0,  8);
+    ctx.bezierCurveTo( -5,   0,    -15,  -8 + m,    -20, -10 + 1.5*m);
+    ctx.bezierCurveTo(-15, -10 + m,     -5,  -5,      0,   0);
+
+    ctx.fill();
+    ctx.restore();
+}
+
+Bird.prototype.update = function(){
+    this.t += 0.1;
+    this.m = 7 * (1 + Math.sin(this.t));
+}
