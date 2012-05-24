@@ -43,7 +43,7 @@ window.onload = function(){
     var tags = document.querySelectorAll('canvas');
     Array.prototype.slice.call(tags).forEach(function(el){
         var id = el.id.substring(3);
-        el.addEventListener('click', Canvas365.startStop, false);
+        //el.addEventListener('click', Canvas365.startStop, false);
         Canvas365.contexts[id] = el.getContext('2d');
         Canvas365.loadDay(id);
     });

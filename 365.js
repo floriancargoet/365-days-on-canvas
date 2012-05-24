@@ -11,6 +11,9 @@ Canvas365.registerDay('365', function(){
         this.vx     = config.vx;
         this.vy     = config.vy;
         this.scale  = config.scale || 1;
+
+        this.targetX = this.x;
+        this.targetY = this.y;
     };
 
     StickMan.prototype.draw = function(){
@@ -64,6 +67,12 @@ Canvas365.registerDay('365', function(){
         this.y += y;
     };
 
+    StickMan.prototype.goTo = function(x, y){
+        var bbox = this.getBBox();
+        this.targetX = Math.min(Math.max(0, x), 500 - bbox.w);
+        this.targetY = Math.min(Math.max(0, y), 500 - bbox.h);
+    };
+
     StickMan.prototype.say = function(msg){
         var bubble = new SpeechBubble(this.ctx, {
             x : 50,
@@ -75,15 +84,14 @@ Canvas365.registerDay('365', function(){
 
     StickMan.prototype.update = function(){
         // move
-        this.move(this.vx, this.vy);
-        var bbox = this.getBBox();
-        // bounce
-        if(bbox.x < 0 || bbox.x + bbox.w > 500){
-            this.vx = -this.vx;
+        var dx = 0, dy = 0;
+        if(Math.abs(this.targetX - this.x) > this.vx){
+            dx = this.targetX > this.x ? this.vx : -this.vx;
         }
-        if(bbox.y < 0 || bbox.y + bbox.h > 500){
-            this.vy = -this.vy;
+        if(Math.abs(this.targetY - this.y) > this.vy){
+            dy = this.targetY > this.y ? this.vy : -this.vy;
         }
+        this.move(dx, dy);
     };
 
     StickMan.prototype.getBBox = function(){
@@ -447,7 +455,7 @@ Canvas365.registerDay('365', function(){
 
         ctx.translate(this.x, this.y);
         ctx.scale(config.scale, config.scale);
-        
+
         ctx.beginPath();
         ctx.moveTo(0, 0);
 
@@ -472,15 +480,16 @@ Canvas365.registerDay('365', function(){
         init : function(ctx){
             // create your objects here
             // add them to the drawList
-            drawList.push(new StickMan(ctx, {
+            var stickman = new StickMan(ctx, {
                 x : 100,
                 y : 380,
-                vx : 0,
+                vx : 3,
                 vy : 0,
                 zIndex : 10,
-                msg : ['It would be easier', 'with a <beach> tag!'],
+                msg : ["Hello!", "Click anywhere and I'll go!"],
                 scale : 0.8
-            }));
+            });
+            drawList.push(stickman);
 
             drawList.push(new Beach(ctx, {
                 yWater : 250,
@@ -528,6 +537,10 @@ Canvas365.registerDay('365', function(){
                 return (a.config.zIndex || 0) - (b.config.zIndex || 0);
             });
 
+            ctx.canvas.addEventListener('click', function(ev){
+                console.log(ev.offsetX, stickman.y);
+                stickman.goTo(ev.offsetX, stickman.y); // animated
+            }, false);
         },
         main : function(ctx){
             ctx.fillStyle = '#0582C2'; // sky
