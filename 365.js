@@ -531,6 +531,8 @@ Bird.prototype.draw = function(){
 
     ctx.translate(this.x, this.y);
     ctx.scale(config.scale, config.scale);
+
+    ctx.beginPath();
     ctx.moveTo(0, 0);
 
     var m = this.m;
