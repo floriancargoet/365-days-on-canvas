@@ -486,16 +486,17 @@ Canvas365.registerDay('365', function(){
                 vx : 3,
                 vy : 0,
                 zIndex : 10,
-                msg : ["Hello!", "Click anywhere and I'll go!"],
+                msg : ["Hello!", "Click anywhere on the", "beach and I'll go!"],
                 scale : 0.8
             });
             drawList.push(stickman);
 
-            drawList.push(new Beach(ctx, {
+            var beach = new Beach(ctx, {
                 yWater : 250,
                 ySand  : 350,
                 zIndex : -1
-            }));
+            });
+            drawList.push(beach);
 
             drawList.push(new Sun(ctx, {
                 x : 400,
@@ -538,8 +539,21 @@ Canvas365.registerDay('365', function(){
             });
 
             ctx.canvas.addEventListener('click', function(ev){
-                console.log(ev.offsetX, stickman.y);
-                stickman.goTo(ev.offsetX, stickman.y); // animated
+                var x = ev.clientX - ctx.canvas.offsetLeft;
+                var y = ev.clientY - ctx.canvas.offsetTop;
+
+                // add bird
+                if(y < beach.config.yWater){
+                    drawList.push(new Bird(ctx, {
+                        x : x,
+                        y : y,
+                        scale : 0.2 + Math.random()
+                    }));
+                }
+                // movement
+                else {
+                    stickman.goTo(x, stickman.y); // animated
+                }
             }, false);
         },
         main : function(ctx){
