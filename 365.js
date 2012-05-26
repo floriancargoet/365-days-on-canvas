@@ -298,7 +298,7 @@ Canvas365.registerDay('365', function(){
     };
 
     Shark.prototype.update = function(){
-        this.t += 0.01
+        this.t += 0.01;
         var dx = 50 * Math.cos(this.t);
         var dy = 30 * Math.sin(this.t);
         this.x = this.cx + dx;
@@ -468,12 +468,12 @@ Canvas365.registerDay('365', function(){
 
         ctx.fill();
         ctx.restore();
-    }
+    };
 
     Bird.prototype.update = function(){
         this.t += 0.1;
         this.m = 7 * (1 + Math.sin(this.t));
-    }
+    };
 
     var drawList = [];
     return {
