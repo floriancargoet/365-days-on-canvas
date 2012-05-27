@@ -1,13 +1,45 @@
 
 Canvas365.registerDay('365', function(){
     // classes and globals
+    BBoxRegistry = {
+        objects : [],
+        bboxes  : [],
+        update : function(object, bbox){
+            var i = this.objects.indexOf(object);
+            if(i !== -1){
+                this.bboxes.splice(i, 1, bbox);
+            } else {
+                this.objects.push(object);
+                this.bboxes.push(bbox);
+            }
+        },
+        remove : function(object){
+            var i = this.objects.indexOf(object);
+            if(i !== -1){
+                this.objects.splice(i, 1);
+                this.bboxes.splice(i, 1);
+            }
+        },
+        getBBoxesAt : function(x, y){
+            return this.bboxes.filter(function(bbox, i){
+                return bbox.x1 < x && x < bbox.x2 && bbox.y1 < y && y < bbox.y2;
+            });
+        },
+        getObjectsAt : function(x, y){
+            var all = this.objects;
+            return this.getBBoxesAt(x, y).map(function(bbox, i){
+                return all[i];
+            });
+        }
+    };
 
     var StickMan = function(ctx, config){
         this.ctx    = ctx;
         this.config = config || {};
 
-        this.x      = config.x;
-        this.y      = config.y;
+        this.x = this.y = 0;
+        this.move(config.x, config.y);
+
         this.vx     = config.vx;
         this.vy     = config.vy;
         this.scale  = config.scale || 1;
@@ -65,6 +97,9 @@ Canvas365.registerDay('365', function(){
     StickMan.prototype.move = function(x, y){
         this.x += x;
         this.y += y;
+
+        // bbox
+        BBoxRegistry.update(this, this.getBBox2());
     };
 
     StickMan.prototype.goTo = function(x, y){
@@ -100,6 +135,14 @@ Canvas365.registerDay('365', function(){
             y : this.y,
             w : 60  * this.scale,
             h : 130 * this.scale
+        };
+    };
+    StickMan.prototype.getBBox2 = function(){
+        return {
+            x1 : this.x,
+            y1 : this.y,
+            x2 : this.x + 60  * this.scale,
+            y2 : this.y + 130 * this.scale
         };
     };
 
@@ -245,6 +288,13 @@ Canvas365.registerDay('365', function(){
         this.x      = config.x;
         this.y      = config.y;
         this.radius = config.radius;
+
+        BBoxRegistry.update(this, {
+            x1 : this.x - this.radius,
+            y1 : this.y - this.radius,
+            x2 : this.x + this.radius,
+            y2 : this.y + this.radius
+        });
     };
 
     Sun.prototype.draw = function(){
@@ -304,6 +354,18 @@ Canvas365.registerDay('365', function(){
         this.x = this.cx + dx;
         this.y = this.cy + dy;
         this.reverse = (dy < 0);
+
+        // buggy
+        // BBoxRegistry.update(this, this.getBBox2());
+    };
+
+    Shark.prototype.getBBox2 = function(){
+        return {
+            x1 : this.x,
+            y1 : this.y - 15,
+            x2 : this.x + 15,
+            y2 : this.y
+        };
     };
 
     var Umbrella = function(ctx, config){
@@ -447,6 +509,18 @@ Canvas365.registerDay('365', function(){
         config.scale   = config.scale || 1;
         config.color   = config.color || [0, 0, 0];
         config.opacity = config.opacity || 1; // can't be 0
+
+        this.register();
+    };
+
+    Bird.prototype.register = function(){
+        var s = this.config.scale;
+        BBoxRegistry.update(this, {
+            x1 : this.x - s * 20,
+            y1 : this.y - s * 10,
+            x2 : this.x + s * 20,
+            y2 : this.y + s * 10
+        });
     };
 
     Bird.prototype.draw = function(){
@@ -482,6 +556,7 @@ Canvas365.registerDay('365', function(){
     var drawList = [];
     var transparentBird;
     var beach;
+    var boxes = [];
 
     return {
         init : function(ctx){
@@ -574,6 +649,7 @@ Canvas365.registerDay('365', function(){
                 // add bird
                 if(y < beach.config.yWater){
                     transparentBird.config.opacity = 1;
+                    transparentBird.register();
                     drawList.push(transparentBird);
                     transparentBird = makeBird();
                 }
@@ -589,6 +665,8 @@ Canvas365.registerDay('365', function(){
 
                 transparentBird.x = x;
                 transparentBird.y = y;
+
+                boxes = BBoxRegistry.getBBoxesAt(x, y);
             }, false);
 
         },
@@ -598,6 +676,13 @@ Canvas365.registerDay('365', function(){
             drawList.forEach(function(item, i){
                 item.update();
                 item.draw();
+            });
+
+            boxes.forEach(function(box, i){
+                ctx.beginPath();
+                ctx.fillStyle = 'orange';
+                ctx.rect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+                ctx.stroke();
             });
 
             // transparent bird
