@@ -444,14 +444,16 @@ Canvas365.registerDay('365', function(){
         this.x = config.x;
         this.y = config.y;
         this.t = 0;
-        config.scale = config.scale || 1;
+        config.scale   = config.scale || 1;
+        config.color   = config.color || [0, 0, 0];
+        config.opacity = config.opacity || 1; // can't be 0
     };
 
     Bird.prototype.draw = function(){
         var ctx = this.ctx;
         var config = this.config;
         ctx.save();
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = 'rgba(' + config.color.join(',') + ',' + config.opacity + ')';
 
         ctx.translate(this.x, this.y);
         ctx.scale(config.scale, config.scale);
@@ -475,7 +477,12 @@ Canvas365.registerDay('365', function(){
         this.m = 7 * (1 + Math.sin(this.t));
     };
 
+
+    // globals
     var drawList = [];
+    var transparentBird;
+    var beach;
+
     return {
         init : function(ctx){
             // create your objects here
@@ -491,7 +498,7 @@ Canvas365.registerDay('365', function(){
             });
             drawList.push(stickman);
 
-            var beach = new Beach(ctx, {
+            beach = new Beach(ctx, {
                 yWater : 250,
                 ySand  : 350,
                 zIndex : -1
@@ -533,28 +540,57 @@ Canvas365.registerDay('365', function(){
                 scale : 0.7
             }));
 
+            // This bird will be attached to the mouse pointer when it's
+            // in the sky. A click will make it black and fix its position
+            // and create a new transparent bird
+            function rand(max){
+                return Math.floor(Math.random()*max);
+            }
+            function makeBird(){
+                return new Bird(ctx, {
+                    x : -100,
+                    y : -100,
+                    color : [rand(255), rand(255), rand(255)],
+                    opacity : 0.5,
+                    scale : 0.5 + Math.random()
+                });
+            }
+
+            transparentBird = makeBird();
+            transparentBird.config.scale = 1.5; // make the first big, so that the user sees it immediately.
+
             // sort the drawlist by zindex
             drawList.sort(function(a, b){
                 return (a.config.zIndex || 0) - (b.config.zIndex || 0);
             });
 
+            var canvasX = ctx.canvas.offsetLeft,
+                canvasY = ctx.canvas.offsetTop;
+
             ctx.canvas.addEventListener('click', function(ev){
-                var x = ev.clientX - ctx.canvas.offsetLeft;
-                var y = ev.clientY - ctx.canvas.offsetTop;
+                var x = ev.clientX - canvasX;
+                var y = ev.clientY - canvasY;
 
                 // add bird
                 if(y < beach.config.yWater){
-                    drawList.push(new Bird(ctx, {
-                        x : x,
-                        y : y,
-                        scale : 0.2 + Math.random()
-                    }));
+                    transparentBird.config.opacity = 1;
+                    drawList.push(transparentBird);
+                    transparentBird = makeBird();
                 }
                 // movement
                 else {
                     stickman.goTo(x, stickman.y); // animated
                 }
             }, false);
+
+            ctx.canvas.addEventListener('mousemove', function(ev){
+                var x = ev.clientX - canvasX;
+                var y = ev.clientY - canvasY;
+
+                transparentBird.x = x;
+                transparentBird.y = y;
+            }, false);
+
         },
         main : function(ctx){
             ctx.fillStyle = '#0582C2'; // sky
@@ -563,6 +599,12 @@ Canvas365.registerDay('365', function(){
                 item.update();
                 item.draw();
             });
+
+            // transparent bird
+            if(transparentBird.y < beach.config.yWater){
+                transparentBird.update();
+                transparentBird.draw();
+            }
         }
     };
 
