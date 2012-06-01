@@ -1,7 +1,7 @@
 
 Canvas365.registerDay('365', function(){
     // classes and globals
-    BBoxRegistry = {
+    var BBoxRegistry = {
         objects : [],
         bboxes  : [],
         update : function(object, bbox){
