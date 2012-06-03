@@ -27,8 +27,9 @@ Canvas365.registerDay('365', function(){
         },
         getObjectsAt : function(x, y){
             var all = this.objects;
-            return this.getBBoxesAt(x, y).map(function(bbox, i){
-                return all[i];
+            var boxes = this.bboxes;
+            return this.getBBoxesAt(x, y).map(function(bbox){
+                return all[boxes.indexOf(bbox)];
             });
         }
     };
@@ -551,12 +552,61 @@ Canvas365.registerDay('365', function(){
         this.m = 7 * (1 + Math.sin(this.t));
     };
 
+    var ModeSelector = function(ctx, config){
+        this.ctx = ctx;
+        this.config = config;
+        this.x = config.x;
+        this.y = config.y;
+        this.register();
+    };
+
+    ModeSelector.prototype.register = function(){
+        var me = this;
+        this.config.modes.forEach(function(mode, i){
+            var x1 = me.x + 2 + 12*i;
+            var y1 = me.y + 2;
+            BBoxRegistry.update(mode, {
+                x1 : x1,
+                y1 : y1,
+                x2 : x1 + 10,
+                y2 : y1 + 10
+            });
+            mode.onClick = me.onModeClick;
+        });
+    };
+
+    ModeSelector.prototype.onModeClick = function(x, y){
+        // mode = global, this = clicked mode object
+        mode = this.mode;
+    };
+
+    ModeSelector.prototype.draw = function(){
+        var ctx = this.ctx;
+        var config = this.config;
+        ctx.save();
+        ctx.fillStyle = 'white';
+
+        ctx.translate(this.x, this.y);
+
+        ctx.fillRect(0, 0, config.modes.length * 12 + 2, 14);
+
+        config.modes.forEach(function(mode, i){
+            ctx.fillStyle = mode.color;
+            ctx.fillRect(2 + 12*i, 2, 10, 10);
+        });
+
+        ctx.restore();
+    };
+
+    ModeSelector.prototype.update = function(){};
+
 
     // globals
     var drawList = [];
     var transparentBird;
     var beach;
     var boxes = [];
+    var mode;
 
     return {
         init : function(ctx){
@@ -615,6 +665,21 @@ Canvas365.registerDay('365', function(){
                 scale : 0.7
             }));
 
+            drawList.push(new ModeSelector(ctx, {
+                x : 10,
+                y : 10,
+                modes : [{
+                    mode  : 'none',
+                    color : 'red'
+                },{
+                    mode  : 'edit',
+                    color : 'green'
+                },{
+                    mode  : 'add',
+                    color : 'orange'
+                }]
+            }));
+
             // This bird will be attached to the mouse pointer when it's
             // in the sky. A click will make it black and fix its position
             // and create a new transparent bird
@@ -646,27 +711,41 @@ Canvas365.registerDay('365', function(){
                 var x = ev.clientX - canvasX;
                 var y = ev.clientY - canvasY;
 
+                // dispatch clicks
+                var hoveredObj = BBoxRegistry.getObjectsAt(x, y);
+                hoveredObj.forEach(function(o){
+                    if(o.onClick){
+                        o.onClick(x, y);
+                    }
+                });
+
                 // add bird
                 if(y < beach.config.yWater){
-                    transparentBird.config.opacity = 1;
-                    transparentBird.register();
-                    drawList.push(transparentBird);
-                    transparentBird = makeBird();
+                    if(mode === 'add'){
+                        transparentBird.config.opacity = 1;
+                        transparentBird.register();
+                        drawList.push(transparentBird);
+                        transparentBird = makeBird();
+                    }
                 }
                 // movement
                 else {
                     stickman.goTo(x, stickman.y); // animated
                 }
+
             }, false);
 
             ctx.canvas.addEventListener('mousemove', function(ev){
                 var x = ev.clientX - canvasX;
                 var y = ev.clientY - canvasY;
 
-                transparentBird.x = x;
-                transparentBird.y = y;
+                if(mode === 'add'){
+                    transparentBird.x = x;
+                    transparentBird.y = y;
+                }
 
                 boxes = BBoxRegistry.getBBoxesAt(x, y);
+
             }, false);
 
         },
@@ -678,17 +757,21 @@ Canvas365.registerDay('365', function(){
                 item.draw();
             });
 
-            boxes.forEach(function(box, i){
-                ctx.beginPath();
-                ctx.fillStyle = 'orange';
-                ctx.rect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
-                ctx.stroke();
-            });
+            if(mode === 'edit'){
+                boxes.forEach(function(box, i){
+                    ctx.beginPath();
+                    ctx.fillStyle = 'orange';
+                    ctx.rect(box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1);
+                    ctx.stroke();
+                });
+            }
 
             // transparent bird
-            if(transparentBird.y < beach.config.yWater){
-                transparentBird.update();
-                transparentBird.draw();
+            if(mode === 'add'){
+                if(transparentBird.y < beach.config.yWater){
+                    transparentBird.update();
+                    transparentBird.draw();
+                }
             }
         }
     };
