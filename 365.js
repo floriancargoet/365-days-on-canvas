@@ -1,6 +1,13 @@
 
 Canvas365.registerDay('365', function(){
     // classes and globals
+
+    var Util = {
+        rand : function (max){
+            return Math.floor(Math.random()*max);
+        }
+    };
+
     var BBoxRegistry = {
         objects : [],
         bboxes  : [],
@@ -49,14 +56,22 @@ Canvas365.registerDay('365', function(){
         this.targetY = this.y;
     };
 
+    StickMan.prototype.onClick = function(){
+        if(mode === 'edit'){
+            var colors = ['white', 'red', 'cyan', 'blue', 'black'];
+            this.config.strokeStyle = colors[Util.rand(colors.length)];
+        }
+    };
+
     StickMan.prototype.draw = function(){
         var ctx    = this.ctx;
         var config = this.config;
 
+        ctx.save();
+
         ctx.lineWidth   = config.lineWidth   || 2;
         ctx.strokeStyle = config.strokeStyle || 'black';
 
-        ctx.save();
         ctx.translate(this.x, this.y);
         ctx.scale(this.scale, this.scale);
 
@@ -289,13 +304,23 @@ Canvas365.registerDay('365', function(){
         this.x      = config.x;
         this.y      = config.y;
         this.radius = config.radius;
+        this.register();
+    };
 
+    Sun.prototype.register = function(){
         BBoxRegistry.update(this, {
             x1 : this.x - this.radius,
             y1 : this.y - this.radius,
             x2 : this.x + this.radius,
             y2 : this.y + this.radius
         });
+    };
+
+    Sun.prototype.onClick = function(){
+        if(mode === 'edit'){
+            this.radius = this.config.radius + (this.radius + 2) % 10;
+            this.register();
+        }
     };
 
     Sun.prototype.draw = function(){
@@ -524,6 +549,12 @@ Canvas365.registerDay('365', function(){
         });
     };
 
+    Bird.prototype.onClick = function(){
+        if(mode === 'edit'){
+            this.config.color = [0, 0, 0];
+        }
+    };
+
     Bird.prototype.draw = function(){
         var ctx = this.ctx;
         var config = this.config;
@@ -683,14 +714,12 @@ Canvas365.registerDay('365', function(){
             // This bird will be attached to the mouse pointer when it's
             // in the sky. A click will make it black and fix its position
             // and create a new transparent bird
-            function rand(max){
-                return Math.floor(Math.random()*max);
-            }
+
             function makeBird(){
                 return new Bird(ctx, {
                     x : -100,
                     y : -100,
-                    color : [rand(255), rand(255), rand(255)],
+                    color : [Util.rand(255), Util.rand(255), Util.rand(255)],
                     opacity : 0.5,
                     scale : 0.5 + Math.random()
                 });
