@@ -57,7 +57,7 @@ Canvas365.registerDay('365', function(){
     };
 
     StickMan.prototype.onClick = function(){
-        if(mode === 'edit'){
+        if(ModeSelector.mode === 'edit'){
             var colors = ['white', 'red', 'cyan', 'blue', 'black'];
             this.config.strokeStyle = colors[Util.rand(colors.length)];
         }
@@ -317,7 +317,7 @@ Canvas365.registerDay('365', function(){
     };
 
     Sun.prototype.onClick = function(){
-        if(mode === 'edit'){
+        if(ModeSelector.mode === 'edit'){
             this.radius = this.config.radius + (this.radius + 2) % 10;
             this.register();
         }
@@ -550,7 +550,7 @@ Canvas365.registerDay('365', function(){
     };
 
     Bird.prototype.onClick = function(){
-        if(mode === 'edit'){
+        if(ModeSelector.mode === 'edit'){
             this.config.color = [0, 0, 0];
         }
     };
@@ -591,6 +591,9 @@ Canvas365.registerDay('365', function(){
         this.register();
     };
 
+    // default mode
+    ModeSelector.mode = 'normal';
+
     ModeSelector.prototype.register = function(){
         var me = this;
         this.config.modes.forEach(function(mode, i){
@@ -607,8 +610,8 @@ Canvas365.registerDay('365', function(){
     };
 
     ModeSelector.prototype.onModeClick = function(x, y){
-        // mode = global, this = clicked mode object
-        mode = this.mode;
+        //this = clicked mode object
+        ModeSelector.mode = this.mode;
     };
 
     ModeSelector.prototype.draw = function(){
@@ -624,8 +627,15 @@ Canvas365.registerDay('365', function(){
         config.modes.forEach(function(mode, i){
             ctx.fillStyle = mode.color;
             ctx.fillRect(2 + 12*i, 2, 10, 10);
+            if(mode.mode === ModeSelector.mode){
+                ctx.strokeRect(2 + 12*i, 2, 10, 10);
+            }
         });
 
+        ctx.font = '14px sans serif';
+        ctx.fillStyle = '#ddd';
+        ctx.textBaseline = 'top';
+        ctx.fillText(ModeSelector.mode, 0, 16);
         ctx.restore();
     };
 
@@ -637,7 +647,6 @@ Canvas365.registerDay('365', function(){
     var transparentBird;
     var beach;
     var boxes = [];
-    var mode;
 
     return {
         init : function(ctx){
@@ -700,7 +709,7 @@ Canvas365.registerDay('365', function(){
                 x : 10,
                 y : 10,
                 modes : [{
-                    mode  : 'none',
+                    mode  : 'normal',
                     color : 'red'
                 },{
                     mode  : 'edit',
@@ -750,7 +759,7 @@ Canvas365.registerDay('365', function(){
 
                 // add bird
                 if(y < beach.config.yWater){
-                    if(mode === 'add'){
+                    if(ModeSelector.mode === 'add'){
                         transparentBird.config.opacity = 1;
                         transparentBird.register();
                         drawList.push(transparentBird);
@@ -768,7 +777,7 @@ Canvas365.registerDay('365', function(){
                 var x = ev.clientX - canvasX;
                 var y = ev.clientY - canvasY;
 
-                if(mode === 'add'){
+                if(ModeSelector.mode === 'add'){
                     transparentBird.x = x;
                     transparentBird.y = y;
                 }
@@ -786,7 +795,7 @@ Canvas365.registerDay('365', function(){
                 item.draw();
             });
 
-            if(mode === 'edit'){
+            if(ModeSelector.mode === 'edit'){
                 boxes.forEach(function(box, i){
                     ctx.beginPath();
                     ctx.fillStyle = 'orange';
@@ -796,7 +805,7 @@ Canvas365.registerDay('365', function(){
             }
 
             // transparent bird
-            if(mode === 'add'){
+            if(ModeSelector.mode === 'add'){
                 if(transparentBird.y < beach.config.yWater){
                     transparentBird.update();
                     transparentBird.draw();
