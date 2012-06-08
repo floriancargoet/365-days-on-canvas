@@ -746,8 +746,14 @@ Canvas365.registerDay('365', function(){
                 canvasY = ctx.canvas.offsetTop;
 
             ctx.canvas.addEventListener('click', function(ev){
-                var x = ev.clientX - canvasX;
-                var y = ev.clientY - canvasY;
+                var x, y;
+                if ( ev.offsetX == null ) { // Firefox
+                   x = ev.layerX;
+                   y = ev.layerY;
+                } else {                    // Other browsers
+                   x = ev.offsetX;
+                   y = ev.offsetY;
+                }
 
                 // dispatch clicks
                 var hoveredObj = BBoxRegistry.getObjectsAt(x, y);
@@ -774,8 +780,14 @@ Canvas365.registerDay('365', function(){
             }, false);
 
             ctx.canvas.addEventListener('mousemove', function(ev){
-                var x = ev.clientX - canvasX;
-                var y = ev.clientY - canvasY;
+                var x, y;
+                if ( ev.offsetX == null ) { // Firefox
+                   x = ev.layerX;
+                   y = ev.layerY;
+                } else {                    // Other browsers
+                   x = ev.offsetX;
+                   y = ev.offsetY;
+                }
 
                 if(ModeSelector.mode === 'add'){
                     transparentBird.x = x;
