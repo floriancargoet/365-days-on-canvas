@@ -189,7 +189,7 @@ Canvas365.registerDay('365', function(){
         ctx.rotate(this.angle, this.angle);
 
         var styles = ['red', 'yellow', 'pink'];
-        styleIndex = 0;
+        var styleIndex = 0;
 
         var angle = 0, arc;
         for(var i = 0, l = this.arcs.length; i < l; i++){
@@ -641,6 +641,70 @@ Canvas365.registerDay('365', function(){
 
     ModeSelector.prototype.update = function(){};
 
+    var Cloud = function(ctx, config){
+        this.ctx = ctx;
+        this.config = config;
+        this.x = config.x;
+        this.y = config.y;
+
+        config.scale = config.scale || 1;
+
+        var angle = 0;
+        var points = [];
+        while(angle < 2 * Math.PI){
+            angle += Math.PI/5 + Math.random() * Math.PI/10;
+
+            points.push({
+                x : 60 * Math.cos(angle),
+                y : 20 * Math.sin(angle)
+            });
+        }
+
+        for(var i = 0, l = points.length; i < l; i++){
+            var pt = points[i];
+            var lastPt = points[i-1] || points[points.length-1];
+            var x0, y0, x1, y1, r;
+            // vector
+            x1 = pt.x - lastPt.x;
+            y1 = pt.y - lastPt.y;
+            // rotate, reduce
+            r = 0.5 + 0.3*Math.random();
+            x0 = y1*r;
+            y0 = -x1*r;
+
+            // apply vector
+            pt.cp2x = pt.x + x0;
+            pt.cp2y = pt.y + y0;
+            pt.cp1x = lastPt.x + x0;
+            pt.cp1y = lastPt.y + y0;
+        }
+
+        this.points = points;
+    };
+
+    Cloud.prototype.draw = function(){
+        var ctx = this.ctx;
+        var config = this.config;
+        ctx.save();
+        ctx.fillStyle = 'white';
+
+        ctx.translate(this.x, this.y);
+        ctx.scale(config.scale, config.scale);
+
+        ctx.beginPath();
+        var pt0 = this.points[0];
+        ctx.moveTo(pt0.x, pt0.y);
+        for(var i = 1, l = this.points.length; i < l; i++){
+            var pt = this.points[i];
+            ctx.bezierCurveTo(pt.cp1x, pt.cp1y, pt.cp2x, pt.cp2y, pt.x, pt.y);
+        }
+        ctx.bezierCurveTo(pt0.cp1x, pt0.cp1y, pt0.cp2x, pt0.cp2y, pt0.x, pt0.y);
+
+        ctx.fill();
+        ctx.restore();
+    };
+
+    Cloud.prototype.update = function(){};
 
     // globals
     var drawList = [];
@@ -708,6 +772,7 @@ Canvas365.registerDay('365', function(){
             drawList.push(new ModeSelector(ctx, {
                 x : 10,
                 y : 10,
+                zIndex : 100,
                 modes : [{
                     mode  : 'normal',
                     color : 'red'
@@ -718,6 +783,24 @@ Canvas365.registerDay('365', function(){
                     mode  : 'add',
                     color : 'orange'
                 }]
+            }));
+
+            drawList.push(new Cloud(ctx, {
+                x : 100,
+                y : 100,
+                scale : 1
+            }));
+
+            drawList.push(new Cloud(ctx, {
+                x : 180,
+                y : 50,
+                scale : 0.5
+            }));
+
+            drawList.push(new Cloud(ctx, {
+                x : 200,
+                y : 120,
+                scale : 0.7
             }));
 
             // This bird will be attached to the mouse pointer when it's
