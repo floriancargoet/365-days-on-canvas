@@ -647,32 +647,43 @@ Canvas365.registerDay('365', function(){
         this.x = config.x;
         this.y = config.y;
 
-        config.scale = config.scale || 1;
-
+        // angle between points is in [2π/10 ; 3π/10]
+        config.angleRange  = config.angleRange  || [Math.PI/10, 3*Math.PI/10];
+        config.ratio       = config.ratio       || 3; // ellipse w/h ratio
+        config.scale       = config.scale       || 1;
+        config.heightRange = config.heightRange || [0.4, 0.4] // between 40% and 80% of the distance between 2 points
+        // precompute the cloud
         var angle = 0;
         var points = [];
+
+        // place some points on an ellipse
+        var arg = config.angleRange;
         while(angle < 2 * Math.PI){
-            angle += Math.PI/5 + Math.random() * Math.PI/10;
+            angle += arg[0] + Math.random() * (arg[1] - arg[0]);
 
             points.push({
-                x : 60 * Math.cos(angle),
+                x : config.ratio * 20 * Math.cos(angle),
                 y : 20 * Math.sin(angle)
             });
         }
 
+        // compute bezier curves between points
+        // control points are placed on the perpendicular lines (outside
+        // the ellipse)
         for(var i = 0, l = points.length; i < l; i++){
             var pt = points[i];
             var lastPt = points[i-1] || points[points.length-1];
             var x0, y0, x1, y1, r;
-            // vector
+            // vector between the 2 points
             x1 = pt.x - lastPt.x;
             y1 = pt.y - lastPt.y;
-            // rotate, reduce
-            r = 0.5 + 0.3*Math.random();
-            x0 = y1*r;
-            y0 = -x1*r;
+            // rotate by 90° and reduce length
+            var hrg = config.heightRange;
+            r = hrg[0] + (hrg[1] - hrg[0]) * Math.random();
+            x0 =  y1 * r;
+            y0 = -x1 * r;
 
-            // apply vector
+            // add vector to both points to determine the control points
             pt.cp2x = pt.x + x0;
             pt.cp2y = pt.y + y0;
             pt.cp1x = lastPt.x + x0;
@@ -698,6 +709,7 @@ Canvas365.registerDay('365', function(){
             var pt = this.points[i];
             ctx.bezierCurveTo(pt.cp1x, pt.cp1y, pt.cp2x, pt.cp2y, pt.x, pt.y);
         }
+        // link the last point to the first
         ctx.bezierCurveTo(pt0.cp1x, pt0.cp1y, pt0.cp2x, pt0.cp2y, pt0.x, pt0.y);
 
         ctx.fill();
@@ -788,7 +800,8 @@ Canvas365.registerDay('365', function(){
             drawList.push(new Cloud(ctx, {
                 x : 100,
                 y : 100,
-                scale : 1
+                angleRange : [Math.PI/10, Math.PI/4],
+                heightRange : [0.6, 0.8]
             }));
 
             drawList.push(new Cloud(ctx, {
@@ -800,7 +813,9 @@ Canvas365.registerDay('365', function(){
             drawList.push(new Cloud(ctx, {
                 x : 200,
                 y : 120,
-                scale : 0.7
+                ratio : 1.2,
+                scale : 0.7,
+                heightRange : [0.5, 0.7]
             }));
 
             // This bird will be attached to the mouse pointer when it's
