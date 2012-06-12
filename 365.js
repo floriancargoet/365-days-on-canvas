@@ -162,62 +162,6 @@ Canvas365.registerDay('365', function(){
         };
     };
 
-
-    var Background = function(ctx, config){
-        this.ctx    = ctx;
-        this.config = config || {};
-
-        this.x      = config.x;
-        this.y      = config.y;
-        this.angle  = config.angle || 0;
-
-        var arcs = [];
-        for(var angle = 0; angle < 2 * Math.PI;){
-            var arc = 0.15 + Math.random() * 0.3;
-            arcs.push(arc);
-            angle += arc;
-        }
-        this.arcs = arcs;
-    };
-
-    Background.prototype.draw = function(){
-        var ctx    = this.ctx;
-        var config = this.config;
-
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle, this.angle);
-
-        var styles = ['red', 'yellow', 'pink'];
-        var styleIndex = 0;
-
-        var angle = 0, arc;
-        for(var i = 0, l = this.arcs.length; i < l; i++){
-            arc = this.arcs[i];
-
-            ctx.beginPath();
-            ctx.fillStyle = styles[styleIndex];
-            styleIndex = (styleIndex + 1) % styles.length;
-
-            ctx.moveTo(0, 0);
-            var r = 500;
-            ctx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
-            angle += arc;
-            ctx.lineTo(r * Math.cos(angle + 0.01), r * Math.sin(angle + 0.01)); // add tiny angle to avoid artifacts
-            ctx.closePath();
-
-            ctx.fill();
-        }
-
-        ctx.restore();
-    };
-    Background.prototype.update = function(){
-        this.rotate(0.005);
-    };
-    Background.prototype.rotate = function(angle){
-        this.angle += angle;
-    };
-
     var Beach = function(ctx, config){
         this.ctx    = ctx;
         this.config = config || {};
