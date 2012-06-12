@@ -477,6 +477,7 @@ Canvas365.registerDay('365', function(){
         this.y = config.y;
         this.t = 0;
         config.scale   = config.scale || 1;
+        this.scale     = config.scale;
         config.color   = config.color || [0, 0, 0];
         config.opacity = config.opacity || 1; // can't be 0
 
@@ -506,7 +507,7 @@ Canvas365.registerDay('365', function(){
         ctx.fillStyle = 'rgba(' + config.color.join(',') + ',' + config.opacity + ')';
 
         ctx.translate(this.x, this.y);
-        ctx.scale(config.scale, config.scale);
+        ctx.scale(this.scale, this.scale);
 
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -523,8 +524,16 @@ Canvas365.registerDay('365', function(){
     };
 
     Bird.prototype.update = function(){
-        this.t += 0.1;
-        this.m = 7 * (1 + Math.sin(this.t));
+        this.t++;
+        this.m = 7 * (1 + Math.sin(this.t/10));
+
+        if(this.config.ttl){
+            var dt = this.config.ttl - this.t;
+            this.scale = this.config.scale * (dt/this.config.ttl);
+            if(dt < 0){
+                this.toRemove = true;
+            }
+        }
     };
 
     var ModeSelector = function(ctx, config){
@@ -834,9 +843,9 @@ Canvas365.registerDay('365', function(){
                 return new Bird(ctx, {
                     x : -100,
                     y : -100,
-                    color : [Util.rand(255), Util.rand(255), Util.rand(255)],
+                    color   : [Util.rand(255), Util.rand(255), Util.rand(255)],
                     opacity : 0.5,
-                    scale : 0.5 + Math.random()
+                    scale   : 0.5 + Math.random()
                 });
             }
 
@@ -872,7 +881,9 @@ Canvas365.registerDay('365', function(){
                 // add bird
                 if(y < beach.config.yWater){
                     if(ModeSelector.mode === 'add'){
+                        transparentBird.t = 0; // reset lifetime
                         transparentBird.config.opacity = 1;
+                        transparentBird.config.ttl = 500;
                         transparentBird.register();
                         drawList.push(transparentBird);
 
@@ -937,9 +948,19 @@ Canvas365.registerDay('365', function(){
         main : function(ctx){
             ctx.fillStyle = '#0582C2'; // sky
             ctx.fillRect(0, 0, 500, 500);
+            var itemsToRm = [];
             drawList.forEach(function(item, i){
                 item.update();
                 item.draw();
+                if(item.toRemove){
+                    itemsToRm.push(item);
+                }
+            });
+            // remove dead items
+            itemsToRm.forEach(function(item){
+                var i = drawList.indexOf(item);
+                drawList.splice(i, 1);
+                BBoxRegistry.remove(item);
             });
 
             if(ModeSelector.mode === 'edit'){
