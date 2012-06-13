@@ -896,6 +896,29 @@ Canvas365.registerDay('365', function(){
 
             }, false);
 
+            var messages = [
+                "Hello!|Click anywhere on the|beach and I'll go!",
+                "What's up?",
+                "I'm afraid of sharks.|I think I've spotted one|in the water…",
+                "Could you add some|birds in the sky?|I feel alone…",
+                "Don't like these clouds?|Just reload the page!",
+                "Did you know you could|make the sun bigger?",
+                "Switch to edit mode|and change my color!",
+                "You should have tell me|it wasn't a nude beach!"
+            ];
+
+            var changeMessage = function(){
+                var c = stickman.config;
+                if(c.msg){
+                    c.msg = null;
+                    setTimeout(changeMessage, 1000);
+                } else {
+                    c.msg = messages[Util.rand(messages.length)].split('|');
+                    setTimeout(changeMessage, 4000);
+                }
+            };
+            setTimeout(changeMessage, 4000);
+
         },
         main : function(ctx){
             ctx.fillStyle = '#0582C2'; // sky
