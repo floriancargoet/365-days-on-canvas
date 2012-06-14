@@ -718,6 +718,61 @@ Canvas365.registerDay('365', function(){
 
     Cloud.prototype.update = function(){};
 
+
+
+    var Palmtree = function(ctx, config){
+        this.ctx = ctx;
+        this.config = config;
+        this.x = config.x;
+        this.y = config.y;
+
+        config.scale   = config.scale || 1;
+    };
+
+    Palmtree.prototype.draw = function(){
+        var ctx = this.ctx;
+        var config = this.config;
+        ctx.save();
+
+        ctx.translate(this.x, this.y);
+        ctx.scale(config.scale, config.scale);
+
+        // trunk
+        ctx.fillStyle = '#803B0A';
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-5, -50, 15, -75);
+        ctx.quadraticCurveTo(20, -77, 20, -73);
+        ctx.quadraticCurveTo( 0, -50, 12,   0);
+        ctx.closePath();
+        ctx.fill();
+
+        // leaves
+        ctx.fillStyle = '#207E39';
+
+        ctx.beginPath();
+        ctx.moveTo(12, -75);
+        ctx.quadraticCurveTo(-5, -73, -20, -75);
+        ctx.bezierCurveTo(-10, -80, 0, -90, 10, -85);
+        ctx.quadraticCurveTo(-7, -95, -25, -100);
+        ctx.bezierCurveTo(-10, -98, 10, -105, 20, -90);
+        ctx.bezierCurveTo(25, -100, 42, -105, 47, -110);
+        ctx.lineTo(30, -90);
+        ctx.quadraticCurveTo(55, -92, 58, -80);
+        ctx.quadraticCurveTo(45, -80, 30, -82);
+        ctx.quadraticCurveTo(45, -80, 48, -60);
+        ctx.quadraticCurveTo(30, -65, 22, -75);
+        ctx.quadraticCurveTo(20, -80, 12, -75)
+
+        ctx.fill();
+
+        ctx.restore();
+    };
+
+    Palmtree.prototype.update = function(){};
+
+
     // globals
     var drawList = [];
     var transparentBird;
@@ -818,6 +873,15 @@ Canvas365.registerDay('365', function(){
                 heightRange : [0.5, 0.7]
             }));
 
+            drawList.push(new Palmtree(ctx, {
+                x : 50,
+                y : 450,
+                zIndex : 5,
+                scale  : 2.2
+            }));
+
+
+
             // This bird will be attached to the mouse pointer when it's
             // in the sky. A click will make it black and fix its position
             // and create a new transparent bird
@@ -867,6 +931,12 @@ Canvas365.registerDay('365', function(){
                         transparentBird.config.opacity = 1;
                         transparentBird.register();
                         drawList.push(transparentBird);
+
+                        // sort the drawlist by zindex
+                        drawList.sort(function(a, b){
+                            return (a.config.zIndex || 0) - (b.config.zIndex || 0);
+                        });
+
                         transparentBird = makeBird();
                     }
                 }
