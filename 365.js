@@ -644,6 +644,18 @@ Canvas365.registerDay('365', function(){
         }
 
         this.points = points;
+        this.register();
+    };
+
+    Cloud.prototype.register = function(){
+        var h = 20 * this.config.scale;
+        var w = 20 * this.config.ratio * this.config.scale;
+        BBoxRegistry.update(this, {
+            x1 : this.x - w,
+            y1 : this.y - h,
+            x2 : this.x + w,
+            y2 : this.y + h
+        });
     };
 
     Cloud.prototype.draw = function(){
@@ -671,6 +683,14 @@ Canvas365.registerDay('365', function(){
 
     Cloud.prototype.update = function(){};
 
+    Cloud.prototype.onDrag = function(x, y){
+        this.x = x;
+        this.y = y;
+    };
+
+    Cloud.prototype.onDragEnd = function(){
+        this.register();
+    };
 
 
     var Palmtree = function(ctx, config){
@@ -731,6 +751,7 @@ Canvas365.registerDay('365', function(){
     var transparentBird;
     var beach;
     var boxes = [];
+    var dragged = [];
 
     return {
         init : function(ctx){
@@ -758,7 +779,7 @@ Canvas365.registerDay('365', function(){
                 x : 400,
                 y : 100,
                 radius : 20,
-                zIndex : -1
+                zIndex : -2
             }));
 
             drawList.push(new Shark(ctx, {
@@ -806,23 +827,26 @@ Canvas365.registerDay('365', function(){
             }));
 
             drawList.push(new Cloud(ctx, {
-                x : 100,
-                y : 100,
-                angleRange : [Math.PI/10, Math.PI/4],
+                x           : 100,
+                y           : 100,
+                zIndex      : -3,
+                angleRange  : [Math.PI/10, Math.PI/4],
                 heightRange : [0.6, 0.8]
             }));
 
             drawList.push(new Cloud(ctx, {
-                x : 180,
-                y : 50,
-                scale : 0.5
+                x      : 180,
+                y      : 50,
+                scale  : 0.5,
+                zIndex : -3
             }));
 
             drawList.push(new Cloud(ctx, {
-                x : 200,
-                y : 120,
-                ratio : 1.2,
-                scale : 0.7,
+                x      : 200,
+                y      : 120,
+                ratio  : 1.2,
+                scale  : 0.7,
+                zIndex : -3,
                 heightRange : [0.5, 0.7]
             }));
 
@@ -919,7 +943,39 @@ Canvas365.registerDay('365', function(){
 
                 boxes = BBoxRegistry.getBBoxesAt(x, y);
 
+                // drag & drop
+                dragged.forEach(function(o){
+                    o.onDrag(x, y);
+                });
             }, false);
+
+            ctx.canvas.addEventListener('mousedown', function(ev){
+                var x, y;
+                if ( ev.offsetX == null ) { // Firefox
+                   x = ev.layerX;
+                   y = ev.layerY;
+                } else {                    // Other browsers
+                   x = ev.offsetX;
+                   y = ev.offsetY;
+                }
+
+                if(ModeSelector.mode === 'edit'){
+                    dragged = BBoxRegistry.getObjectsAt(x, y).filter(function(o){
+                        return !!(o.onDrag);
+                    });
+                }
+
+            }, false);
+
+            ctx.canvas.addEventListener('mouseup', function(ev){
+                // drag & drop
+                dragged.forEach(function(o){
+                    if(o.onDragEnd){
+                        o.onDragEnd();
+                    }
+                });
+                dragged = [];
+            });
 
             var messages = [
                 "Hello!|Click anywhere on the|beach and I'll go!",
