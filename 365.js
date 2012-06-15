@@ -604,7 +604,7 @@ Canvas365.registerDay('365', function(){
         config.angleRange  = config.angleRange  || [Math.PI/10, 3*Math.PI/10];
         config.ratio       = config.ratio       || 3; // ellipse w/h ratio
         config.scale       = config.scale       || 1;
-        config.heightRange = config.heightRange || [0.4, 0.4] // between 40% and 80% of the distance between 2 points
+        config.heightRange = config.heightRange || [0.4, 0.4]; // between 40% and 80% of the distance between 2 points
         // precompute the cloud
         var angle = 0;
         var points = [];
@@ -716,7 +716,7 @@ Canvas365.registerDay('365', function(){
         ctx.quadraticCurveTo(45, -80, 30, -82);
         ctx.quadraticCurveTo(45, -80, 48, -60);
         ctx.quadraticCurveTo(30, -65, 22, -75);
-        ctx.quadraticCurveTo(20, -80, 12, -75)
+        ctx.quadraticCurveTo(20, -80, 12, -75);
 
         ctx.fill();
 
