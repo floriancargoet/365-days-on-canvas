@@ -245,10 +245,13 @@ Canvas365.registerDay('365', function(){
         this.ctx    = ctx;
         this.config = config || {};
 
-        this.x      = config.x;
-        this.y      = config.y;
-        this.radius = config.radius;
-        this.register();
+        this.radius  = config.radius;
+        this.radius2 = config.radius2;
+
+        this.cx = config.x;
+        this.cy = config.y;
+
+        this.t = 3*Math.PI/4;
     };
 
     Sun.prototype.register = function(){
@@ -282,7 +285,16 @@ Canvas365.registerDay('365', function(){
         ctx.restore();
     };
 
-    Sun.prototype.update = function(){};
+    Sun.prototype.update = function(){
+        this.t += 0.001;
+        var r = this.config.radius2;
+        this.x = this.cx + r * Math.cos(Math.PI + this.t);
+        this.y = this.cy - r * Math.sin(this.t);
+
+        // random formula
+        this.night = Math.min(Math.max(0, 0.4 - 2*Math.sin(this.t)), 0.8);
+        this.register();
+    };
 
 
     var Shark = function(ctx, config){
@@ -749,7 +761,7 @@ Canvas365.registerDay('365', function(){
     // globals
     var drawList = [];
     var transparentBird;
-    var beach;
+    var beach, sun, modeSelector;
     var boxes = [];
     var dragged = [];
 
@@ -775,12 +787,14 @@ Canvas365.registerDay('365', function(){
             });
             drawList.push(beach);
 
-            drawList.push(new Sun(ctx, {
-                x : 400,
-                y : 100,
-                radius : 20,
-                zIndex : -2
-            }));
+            sun = new Sun(ctx, {
+                x : 250,
+                y : 250,
+                radius  : 20,
+                radius2 : 220,
+                zIndex  : -5
+            })
+            drawList.push(sun);
 
             drawList.push(new Shark(ctx, {
                 x : 350,
@@ -808,22 +822,6 @@ Canvas365.registerDay('365', function(){
                 x : 320,
                 y : 100,
                 scale : 0.7
-            }));
-
-            drawList.push(new ModeSelector(ctx, {
-                x : 10,
-                y : 10,
-                zIndex : 100,
-                modes : [{
-                    mode  : 'normal',
-                    color : 'red'
-                },{
-                    mode  : 'edit',
-                    color : 'green'
-                },{
-                    mode  : 'add',
-                    color : 'orange'
-                }]
             }));
 
             drawList.push(new Cloud(ctx, {
@@ -857,7 +855,21 @@ Canvas365.registerDay('365', function(){
                 scale  : 2.2
             }));
 
-
+            modeSelector = new ModeSelector(ctx, {
+                x : 10,
+                y : 10,
+                zIndex : 100,
+                modes : [{
+                    mode  : 'normal',
+                    color : 'red'
+                },{
+                    mode  : 'edit',
+                    color : 'green'
+                },{
+                    mode  : 'add',
+                    color : 'orange'
+                }]
+            });
 
             // This bird will be attached to the mouse pointer when it's
             // in the sky. A click will make it black and fix its position
@@ -1002,6 +1014,7 @@ Canvas365.registerDay('365', function(){
 
         },
         main : function(ctx){
+            ctx.save();
             ctx.fillStyle = '#0582C2'; // sky
             ctx.fillRect(0, 0, 500, 500);
             var itemsToRm = [];
@@ -1012,6 +1025,13 @@ Canvas365.registerDay('365', function(){
                     itemsToRm.push(item);
                 }
             });
+            // night filter
+            ctx.fillStyle = 'rgba(0, 0, 0, ' + sun.night + ')';
+            ctx.fillRect(0, 0, 500, 500);
+
+            modeSelector.update();
+            modeSelector.draw();
+
             // remove dead items
             itemsToRm.forEach(function(item){
                 var i = drawList.indexOf(item);
@@ -1035,6 +1055,7 @@ Canvas365.registerDay('365', function(){
                     transparentBird.draw();
                 }
             }
+            ctx.restore();
         }
     };
 
