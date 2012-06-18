@@ -985,7 +985,7 @@ Canvas365.registerDay('365', function(){
                 "Don't like these clouds?|Just reload the page!",
                 "Did you know you could|make the sun bigger?",
                 "Switch to edit mode|and change my color!",
-                "You should have tell me|it wasn't a nude beach!"
+                "You should have told me|it wasn't a nude beach!"
             ];
 
             var changeMessage = function(){
