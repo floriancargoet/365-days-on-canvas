@@ -241,7 +241,7 @@ Canvas365.registerDay('365', function(){
         this.amplitude2 = 0.25*(1 + Math.sin(this.t - Math.PI/6));
     };
 
-    var Sun = function(ctx, config){
+    var CelestialBody = function(ctx, config){
         this.ctx    = ctx;
         this.config = config || {};
 
@@ -251,10 +251,10 @@ Canvas365.registerDay('365', function(){
         this.cx = config.x;
         this.cy = config.y;
 
-        this.t = 3*Math.PI/4;
+        this.t = config.offset || 0;
     };
 
-    Sun.prototype.register = function(){
+    CelestialBody.prototype.register = function(){
         BBoxRegistry.update(this, {
             x1 : this.x - this.radius,
             y1 : this.y - this.radius,
@@ -263,20 +263,20 @@ Canvas365.registerDay('365', function(){
         });
     };
 
-    Sun.prototype.onClick = function(){
+    CelestialBody.prototype.onClick = function(){
         if(ModeSelector.mode === 'edit'){
             this.radius = this.config.radius + (this.radius + 2) % 10;
             this.register();
         }
     };
 
-    Sun.prototype.draw = function(){
+    CelestialBody.prototype.draw = function(){
         var ctx    = this.ctx;
         var config = this.config;
 
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#FFFF00';
+        ctx.fillStyle = config.color || '#FFFF00';
 
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, 2 * Math.PI, true);
@@ -285,14 +285,12 @@ Canvas365.registerDay('365', function(){
         ctx.restore();
     };
 
-    Sun.prototype.update = function(){
+    CelestialBody.prototype.update = function(){
         this.t += 0.001;
         var r = this.config.radius2;
         this.x = this.cx + r * Math.cos(Math.PI + this.t);
         this.y = this.cy - r * Math.sin(this.t);
 
-        // random formula
-        this.night = Math.min(Math.max(0, 0.4 - 2*Math.sin(this.t)), 0.8);
         this.register();
     };
 
@@ -757,11 +755,30 @@ Canvas365.registerDay('365', function(){
 
     Palmtree.prototype.update = function(){};
 
+    var NightFilter = function(ctx, config){
+        this.ctx = ctx;
+        this.config = config;
+        this.sun = config.sun;
+    };
+
+    NightFilter.prototype.draw = function(){
+        var ctx = this.ctx;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, ' + this.opacity + ')';
+        ctx.fillRect(0, 0, 500, 500);
+        ctx.restore();
+    };
+
+    NightFilter.prototype.update = function(){
+        // random formula
+        this.opacity = Math.min(Math.max(0, 0.4 - 2*Math.sin(this.sun.t)), 0.8);
+    };
+
 
     // globals
     var drawList = [];
     var transparentBird;
-    var beach, sun, modeSelector;
+    var beach, modeSelector;
     var boxes = [];
     var dragged = [];
 
@@ -787,14 +804,31 @@ Canvas365.registerDay('365', function(){
             });
             drawList.push(beach);
 
-            sun = new Sun(ctx, {
+            var sun = new CelestialBody(ctx, {
                 x : 250,
                 y : 250,
                 radius  : 20,
                 radius2 : 220,
-                zIndex  : -5
+                zIndex  : -5,
+                offset  : 3*Math.PI/4
             })
-            drawList.push(sun);
+
+            var moon = new CelestialBody(ctx, {
+                x : 250,
+                y : 250,
+                radius  : 20,
+                radius2 : 240,
+                zIndex  : -5,
+                color   : '#DDECC2',
+                offset  : -Math.PI/4
+            });
+
+            var nightFilter = new NightFilter(ctx, {
+                sun : sun, // the filter is sync with the sun
+                zIndex : 1000
+            });
+
+            drawList.push(sun, moon, nightFilter);
 
             drawList.push(new Shark(ctx, {
                 x : 350,
@@ -1025,10 +1059,8 @@ Canvas365.registerDay('365', function(){
                     itemsToRm.push(item);
                 }
             });
-            // night filter
-            ctx.fillStyle = 'rgba(0, 0, 0, ' + sun.night + ')';
-            ctx.fillRect(0, 0, 500, 500);
 
+            // mode selector
             modeSelector.update();
             modeSelector.draw();
 
